@@ -19,15 +19,16 @@ end
 
 conf = Utils::Conf.new "config.yml"
 cli = Tautulli.new conf[:url], api_key: conf[:api_key]
-srv = WEBrick::HTTPServer.new Port: 8080
+srv = WEBrick::HTTPServer.new Port: conf[:port]
 srv.mount_proc "/sesscount" do |req, res|
   unless req.path_info.empty?
     res.status = 404
     next
   end
+  count = cli.cmd("get_activity").fetch("sessions").size
   res.status = 200
   res['Content-Type'] = "application/json"
-  res.body = JSON.dump cli.cmd("get_activity").fetch("sessions").size
+  res.body = JSON.dump count
 end
 
 trap 'INT' do srv.shutdown end
